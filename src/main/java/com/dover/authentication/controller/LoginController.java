@@ -1,36 +1,36 @@
 package com.dover.authentication.controller;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.ModelAndView;
-import com.dover.authentication.model.*;
 
+import com.dover.authentication.dao.UserDaoImpl;
+import com.dover.authentication.model.Login;
+import com.dover.authentication.model.User;
+ 
 @Controller
 public class LoginController {
-  @Autowired
-  UserService userService;
-  @RequestMapping(value = "/login", method = RequestMethod.GET)
-  public ModelAndView showLogin(HttpServletRequest request, HttpServletResponse response) {
-    ModelAndView mav = new ModelAndView("login");
-    mav.addObject("login", new Login());
-    return mav;
-  }
-  @RequestMapping(value = "/loginProcess", method = RequestMethod.POST)
-  public ModelAndView loginProcess(HttpServletRequest request, HttpServletResponse response,
-  @ModelAttribute("login") Login login) {
-    ModelAndView mav = null;
-    User user = userService.validateUser(login);
-    if (null != user) {
-    mav = new ModelAndView("welcome");
-    mav.addObject("firstname", user.getFirstname());
-    } else {
-    mav = new ModelAndView("login");
-    mav.addObject("message", "Username or Password is wrong!!");
+    @RequestMapping(value = "/login", method = RequestMethod.GET)
+    public String init(Model model) {
+        model.addAttribute("msg", "Please Enter Your Login Details");
+        return "login";
     }
-    return mav;
-  }
+ 
+    @RequestMapping(method = RequestMethod.POST)
+    public String submit(Model model, @ModelAttribute("loginBean") Login login) {
+        if (login != null && login.getUsername() != null & login.getPassword() != null) {
+        	UserDaoImpl userdao = new UserDaoImpl();
+        	if (userdao.validateUser(login) != null) {
+            	 	model.addAttribute("msg", "welcome" + login.getUsername());
+                return "success";
+            } else {
+                model.addAttribute("error", "Invalid Details");
+                return "login";
+            }
+        } else {
+            model.addAttribute("error", "Please enter Details");
+            return "login";
+        }
+    }
 }
-
